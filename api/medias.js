@@ -19,6 +19,11 @@ const medias = [
         type: "serie",
         title: "Game of Thrones"
     },
+    {
+        id: 5,
+        type: "serie",
+        title: "JoJo"
+    }
 ]
 
 module.exports = (req, res) => {
