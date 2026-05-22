@@ -1,42 +1,25 @@
-const medias = [
-    {
-        id: 1,
-        type: "movie",
-        title: "Donnie Darko"
-    },
-    {
-        id: 2,
-        type: "serie",
-        title: "Breaking Bad"
-    },
-    {
-        id: 3,
-        type: "movie",
-        title: "Black Swan"
-    },
-    {
-        id:4,
-        type: "serie",
-        title: "Game of Thrones"
-    },
-    {
-        id: 5,
-        type: "serie",
-        title: "JoJo"
-    }
-]
+const { getCollection } = require('./_lib/mongo');
+const { validateProduct } = require('./_lib/validators/product');
 
-module.exports = (req, res) => {
-    if (req.method === "GET"){
-        return res.status(200).json({medias});
-    }else if (req.method === "POST"){
-        const newMedia = req.body;
-        return res.status(201).json({
-            message: "Media Created",
-            media: newMedia,
-            totalMedias: [...medias, newMedia].length,
-            allMedias:[...medias, newMedia]
-        }
-        );
+module.exports = async (req, res) => {
+  const collection = await getCollection();
+
+  if (req.method === 'POST') {
+    const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : req.body;
+
+    const validation = validateProduct(body);
+    if (!validation.ok) {
+      return res.status(400).json({ error: validation.error });
     }
-}
+
+    await collection.insertOne(validation.value);
+  }
+
+  if (req.method !== 'GET' && req.method !== 'POST') {
+    res.setHeader('Allow', 'GET, POST');
+    return res.status(405).json({ error: 'Method Not Allowed' });
+  }
+
+  const products = await collection.find({}).toArray();
+  return res.status(200).json(products);
+};
